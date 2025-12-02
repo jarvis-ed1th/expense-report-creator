@@ -20,50 +20,59 @@ def load_data():
 
     # 1. Lire les métadonnées (Colonnes F et G - Index 5 et 6)
     # On suppose que les données clés/valeurs commencent ligne 2 (index 1)
-    df_meta = pd.read_excel(
+    df_data = pd.read_excel(
         DATA_FILE,
         sheet_name="Tableau de bord",
         usecols="F:G",
     )
 
-    df_meta.columns = ["key", "value"]
+    df_data.columns = ["key", "value"]
 
     # Nettoyage des métadonnées pour en faire un dictionnaire
-    meta_dict = {}
-    for _, row in df_meta.iterrows():
+    data_dict = {}
+    for _, row in df_data.iterrows():
         if pd.notna(row["key"]):
             # Nettoyage des clés pour qu'elles soient utilisables en variable
             key = str(row["key"]).strip()
             val = row["value"] if pd.notna(row["value"]) else ""
-            meta_dict[key] = val
+            data_dict[key] = val
 
     # 2. Lire les lignes de frais (Colonnes A à D)
     df_items = pd.read_excel(DATA_FILE, sheet_name="Tableau de bord", usecols="A:D")
 
     # On ne garde que les lignes où "Référence" n'est pas vide
     items = []
-    total_global = 0.0
+    final_price = 0.0
 
     for _, row in df_items.iterrows():
         if pd.notna(row["Référence"]):
-            qty = row["Quantité"] if pd.notna(row["Quantité"]) else 0
-            prix_u = row["Prix unitaire"] if pd.notna(row["Prix unitaire"]) else 0
-            prix_t = row["Prix total"] if pd.notna(row["Prix total"]) else 0
+            quantity = row["Quantité"] if pd.notna(row["Quantité"]) else 0
+            unit_price = row["Prix unitaire"] if pd.notna(row["Prix unitaire"]) else 0
+            total_price = row["Prix total"] if pd.notna(row["Prix total"]) else 0
 
             items.append(
                 {
-                    "quantite": int(qty),
+                    "quantity": int(quantity),
                     "reference": row["Référence"],
-                    "prix_unitaire": f"{prix_u:.2f}",
-                    "prix_total": f"{prix_t:.2f}",
+                    # :.2f permet le formatage d'un float (f) de 2 caractères (2) après la virgule (.)
+                    "unit_price": f"{unit_price:.2f}",
+                    "total_price": f"{total_price:.2f}",
                 }
             )
-            total_global += float(prix_t)
+            final_price += float(total_price)
 
-    return meta_dict, items, total_global
+            RECEIPT_DIR = os.path.join(ASSETS_DIR, "justificatifs")
+            receipt_files = []
+
+            for file in os.listdir(RECEIPT_DIR):
+                path = os.path.join(RECEIPT_DIR, file)
+                if os.path.isfile(path):
+                    receipt_files.append(path)
+
+    return data_dict, items, final_price, receipt_files
 
 
-def generate_latex(meta_dict, items, total_global):
+def generate_latex(data_dict, items, final_price, receipt_files):
     """Injecte les données dans le template LaTeX."""
 
     # Configuration de Jinja pour LaTeX (syntaxe personnalisée pour éviter les conflits avec {})
@@ -86,33 +95,50 @@ def generate_latex(meta_dict, items, total_global):
     # Mapping des clés Excel (humaines) vers les variables Jinja (code)
     # Adapte ces clés selon le texte EXACT dans ton fichier Excel colonnes F
     context = {
-        "logo_path": os.path.join(
-            ASSETS_DIR, meta_dict.get("Nom du fichier logo (vide si pas)")
+        "association_name": data_dict.get("Nom de l'association"),
+        "association_adress_1": data_dict.get(
+            "Adresse de l'association (partie 1)", ""
         ),
-        "nom_asso": "Nom de ton Club",  # Peut être ajouté dans l'Excel ou hardcodé ici
-        "adresse_asso_1": meta_dict.get("Adresse de l'Association (partie 1)", ""),
-        "adresse_asso_2": meta_dict.get("Adresse de l'Association (partie 2)", ""),
-        "email_asso": "contact@tonclub.fr",
-        "numero_ndf": "2025-001",  # À automatiser selon tes besoins
-        "date_jour": datetime.now().strftime("%d/%m/%Y"),
-        "beneficiaire_nom": meta_dict.get(
+        "association_adress_2": data_dict.get(
+            "Adresse de l'association (partie 2)", ""
+        ),
+        "association_email": data_dict.get("Email de l'association"),
+        "ERC_number": data_dict.get("Numéro de la note de frais"),
+        "date": datetime.now().strftime("%d/%m/%Y"),
+        "mandate": data_dict.get("Mandat"),
+        "treasurer": data_dict.get("Trésorier"),
+        "beneficiary_name": data_dict.get(
             "Bénéficiaire (à remplir sur la feuille suivante)"
         ),
-        "beneficiaire_adresse": f"{meta_dict.get('Adresse (partie 1)', '')} {meta_dict.get('Adresse (partie 2)', '')}",
-        "beneficiaire_iban": meta_dict.get(
-            "IBAN (remplissage auto à partir du bénéficiaire)"
+        "beneficiary_adress_1": data_dict.get("Adresse (partie 1)"),
+        "beneficiary_adress_2": data_dict.get("Adresse (partie 2)"),
+        "beneficiary_phone": data_dict.get("Téléphone"),
+        "beneficiary_iban": data_dict.get(
+            "IBAN (remplissage auto à partir du bénéficiaire)", ""
         ),
-        "mode_remboursement": meta_dict.get("Mode de remboursement"),
-        "lieu_signature": meta_dict.get("Fait à", "Toulouse"),
-        "signature_path": os.path.join(
-            ASSETS_DIR, meta_dict.get("Nom du fichier signature (vide si pas)")
-        ),
-        "liste_pieces_jointes": meta_dict.get(
-            "Noms pièces jointes (une par ligne vers le bas)", "Voir suite"
+        "refund_mod": data_dict.get("Mode de remboursement"),
+        "lieu_signature": data_dict.get("Fait à", "Toulouse"),
+        "attachment_list": data_dict.get(
+            "Noms pièces jointes (séparées par une virgule)"
         ),
         "items": items,
-        "total_global": f"{total_global:.2f}",
+        "final_price": f"{final_price:.2f}",
+        "receipt_files": receipt_files,
     }
+
+    if data_dict.get("Nom du fichier signature (vide si pas)") != "":
+        context["signature_path"] = os.path.join(
+            ASSETS_DIR, data_dict.get("Nom du fichier signature (vide si pas)")
+        )
+    else:
+        context["signature_path"] = ""
+
+    if data_dict.get("Nom du fichier logo (vide si pas)") != "":
+        context["logo_path"] = os.path.join(
+            ASSETS_DIR, data_dict.get("Nom du fichier logo (vide si pas)")
+        )
+    else:
+        context["logo_path"] = ""
 
     return template.render(context)
 
@@ -128,9 +154,6 @@ def compile_pdf(tex_content, output_filename="note_de_frais.pdf"):
 
     print(f"Compilation de {output_filename}...")
 
-    # Appel système à pdflatex
-    # -interaction=nonstopmode permet de ne pas bloquer en cas d'erreur mineure
-    # -output-directory force la sortie dans le dossier output
     try:
         subprocess.run(
             ["tectonic", "-o", OUTPUT_DIR, tex_file_path],
@@ -161,8 +184,8 @@ def compile_pdf(tex_content, output_filename="note_de_frais.pdf"):
 
 if __name__ == "__main__":
     try:
-        meta, items, total = load_data()
-        latex_code = generate_latex(meta, items, total)
+        data, items, total, receipt = load_data()
+        latex_code = generate_latex(data, items, total, receipt)
         compile_pdf(latex_code, "ma_note_de_frais.pdf")
     except Exception as e:
         print(f"Une erreur est survenue : {e}")
