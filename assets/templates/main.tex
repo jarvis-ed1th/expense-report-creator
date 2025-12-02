@@ -1,0 +1,123 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[top=1cm,bottom=1cm,left=1.8cm,right=1.8cm]{geometry}
+\usepackage{eurosym}
+\usepackage{colortbl}
+\usepackage{graphicx}
+\usepackage[frenchb]{babel}
+\pagestyle{empty}
+
+\begin{document}
+
+\begin{figure}[!ht]
+   \begin{minipage}[c]{.4\linewidth}
+        \includegraphics[width = 7cm]{\VAR{logo_path}}\\
+        % Nom de votre club
+        \textbf{\textcolor[RGB]{255,87,51}{\VAR{nom_asso}}}\\
+        % Adresse du club = Adresse de l'AE
+        \VAR{adresse_asso_1},\\
+        \VAR{adresse_asso_2}\\
+        % Mail de votre club
+        \VAR{email_asso}
+
+   \end{minipage} \hfill
+   \begin{minipage}[l]{.55\linewidth}
+        \hrulefill
+        \begin{center}
+        \begin{Large}
+         % Numéro de note de frais  : année du mandat + numéro de la note de frais
+        \textbf{Note de frais \no 1} : 2025-2026-1\\
+        \end{Large}
+        % Date du jour
+        Faite le \VAR{date_jour}\\
+        \end{center}
+        \hrulefill\\
+        \newline
+        \begin{flushright}
+        \textbf{\textcolor[RGB]{255,87,51}{Bénéficiaire\\}}
+         % Nom et prénom du bénéficiaire
+         \VAR{beneficiaire_nom}\\
+         % Adresse du bénéficiaire
+         \VAR{beneficiaire_adresse}\\
+         % Coordonnées du bénéficiaire
+
+         % Fonction du bénéficiaire dans le club
+
+
+\vspace{0,2cm}
+
+        \end{flushright}
+   \end{minipage}
+\end{figure}
+
+\begin{center}
+\large{\textbf{Note de frais}}\\
+\hrulefill
+\end{center}
+\begin{center}
+\begin{large}
+\begin{tabular}{>{\centering\arraybackslash} b{1.8cm} >{\centering\arraybackslash} b{7.3cm} >{\centering\arraybackslash} b{3.5cm} >{\centering\arraybackslash} b{3.5cm}}
+    \textbf{\textcolor[RGB]{255,87,51}{Quantité}} & \textbf{\textcolor[RGB]{255,87,51}{Référence}} & \textbf{\textcolor[RGB]{255,87,51}{Prix unitaire}} &  \textbf{\textcolor[RGB]{255,87,51}{Prix total}} \\
+\end{tabular}
+
+{\renewcommand{\arraystretch}{1.6}
+\begin{tabular}{|>{\centering\arraybackslash} p{1.8cm}|>{\centering\arraybackslash} p{7cm}|>{\centering\arraybackslash} p{3.5cm}|>{\centering\arraybackslash} p{3.5cm}|}
+  \hline
+   % Rajouter tous les éléments qui sont à rembourser : détailler tout
+   % Boucle sur les items
+   \BLOCK{ for item in items }
+   \VAR{item.quantite} & \VAR{item.reference} & \VAR{item.prix_unitaire} \euro & \VAR{item.prix_total} \euro \\
+   \BLOCK{ endfor }
+
+  \hline
+
+
+\end{tabular}}
+\end{large}
+\end{center}
+\begin{flushright}
+    \begin{large}
+    \begin{tabular}{r l}
+            % Calculer le total
+            \textbf{TOTAL :} \textbf & \VAR{total_global} \euro\\
+    \end{tabular}
+    \end{large}
+\end{flushright}
+
+\vspace{0,5cm}
+
+% Liste des pèces jointes sur les pages suivantes
+Pièces jointes : Preuve d'achat
+
+\vspace{0,5cm}
+
+\begin{minipage}{0.5\linewidth}
+    \textbf{\textcolor[RGB]{255,87,51}{Signature du bénéficiaire}}\\
+    % Nom du bénéficiaire
+    \\
+    % Lieu + date
+    Fait à \hspace{2.5cm} le \\
+    % Signature
+\end{minipage}
+\begin{minipage}{0.5\linewidth}
+    \textbf{\textcolor[RGB]{255,87,51}{Signature de la trésorerie}}\\
+    % Nom du trésorier/de la trésorière
+    \\
+    % Lieu + date
+    Fait à \VAR{lieu_signature} le \VAR{date_jour} \\
+    % Signature
+    \includegraphics[width = 7cm]{\VAR{signature_path}}
+\end{minipage}
+
+\vspace{0,5cm}
+
+\underline{Demande de remboursement par :}\\
+% IBAN du bénéficiaire
+
+- \VAR{mode_remboursement} \VAR{beneficiaire_iban}\\
+
+\newpage
+
+% Mettre ici toutes les preuves de paiement disponibles
+
+\end{document}

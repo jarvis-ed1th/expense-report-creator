@@ -1,0 +1,22 @@
+# Dossier de sortie
+assets/output/
+
+# Dossiers et fichiers généraux
+.DS_Store
+*.log
+*.swp
+
+# Fichiers Python
+__pycache__/
+*.pyc
+
+# Fichiers générés par LaTeX
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+temp.tex
+
+# Fichiers générés par OnlyOffice
+assets/.~lock.data.xlsx#

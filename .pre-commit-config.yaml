@@ -1,0 +1,28 @@
+repos:
+  # --- GROUPE 1 : NETTOYAGE DE BASE ---
+  - repo: https://github.com/pre-commit/pre-commit-hooks # Corrigé
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  # --- GROUPE 2 : TRI DES IMPORTS ---
+  - repo: https://github.com/PyCQA/isort # Corrigé
+    rev: 7.0.0
+    hooks:
+      - id: isort
+
+  # --- GROUPE 3 : FORMATAGE DU CODE ---
+  - repo: https://github.com/psf/black # Corrigé
+    rev: 25.11.0
+    hooks:
+      - id: black
+
+  # --- GROUPE 4 : LINTER (Qualité) ---
+  - repo: https://github.com/pycqa/flake8 # Corrigé
+    rev: 7.3.0
+    hooks:
+      - id: flake8
+        additional_dependencies: [flake8-pyproject]
