@@ -4,139 +4,158 @@
 \usepackage{eurosym}
 \usepackage{colortbl}
 \usepackage{graphicx}
-\usepackage[frenchb]{babel}
+\usepackage[french]{babel}
+\usepackage{tabularx} % AJOUT CRUCIAL: Pour les tableaux auto-ajustables
 \pagestyle{empty}
+
+% Définition d'un nouveau type de colonne pour centrer verticalement dans tabularx
+\renewcommand{\tabularxcolumn}[1]{>{\small}m{#1}}
 
 \begin{document}
 
-\begin{figure}[!ht]
-   \begin{minipage}[c]{.4\linewidth}
-        % logo de l'association
-        \BLOCK{ if logo_path }
-        \includegraphics[width = 7cm]{\VAR{logo_path}}\\
-        \BLOCK{ endif }
-        % Nom de l'association
-        \textbf{\textcolor[RGB]{255,87,51}{\VAR{association_name}}}\\
-        % Adresse de l'association
-        \VAR{association_adress_1},\\
-        \VAR{association_adress_2}\\
-        % Email de l'association
-        \VAR{association_email}\\
+% --- EN-TÊTE (Sans environnement 'figure' pour éviter que ça flotte n'importe où) ---
+\noindent % Empêche l'indentation de la première ligne
+\begin{minipage}[t]{.3\linewidth}
 
-   \end{minipage} \hfill
-   \begin{minipage}[l]{.55\linewidth}
-        \hrulefill
-        \begin{center}
-        \begin{Large}
-         % Numéro de note de frais  : année du mandat + numéro de la note de frais
-        \textbf{Note de frais \no \VAR{ER_number}} : \VAR{mandate}-\VAR{ER_number}\\
-        \end{Large}
-        % Date du jour
-        Faite le \VAR{date}\\
-        \end{center}
-        \hrulefill\\
-        \newline
-        \begin{flushright}
+    \vspace{0pt}
+    % LOGO
+    \BLOCK{ if logo_path }
+    % width=\linewidth permet à l'image de s'adapter au conteneur (minipage)
+    % keepaspectratio évite la déformation
+    \includegraphics[width=\linewidth, keepaspectratio]{\VAR{logo_path}}\\
+    \BLOCK{ endif }
+
+    \vspace{0.2cm} % Utilisation du point pour les décimales
+
+    % INFO ASSO
+    \textbf{\textcolor[RGB]{255,87,51}{\VAR{association_name}}}\\
+    \VAR{association_adress_1},\\
+    \VAR{association_adress_2}\\
+    \VAR{association_email}\\
+\end{minipage}%
+\hfill % Pousse le bloc suivant à droite
+\begin{minipage}[t]{.55\linewidth}
+    \hrulefill
+    \begin{center}
+        \Large{\textbf{Note de frais \no \VAR{ER_number}} : \VAR{mandate}-\VAR{ER_number}}
+
+        \vspace{0.2cm}
+        \normalsize{Faite le \VAR{date}}
+    \end{center}
+    \hrulefill
+
+    \vspace{0.5cm}
+
+    \begin{flushright}
         \textbf{\textcolor[RGB]{255,87,51}{Bénéficiaire}}\\
-        % Nom et prénom du bénéficiaire
         \VAR{beneficiary_name}\\
-        % Adresse du bénéficiaire
         \VAR{beneficiary_adress_1},\\
         \VAR{beneficiary_adress_2}\\
-        % Coordonnées du bénéficiaire
         \BLOCK{ if benficiary_phone }
         \VAR{beneficiary_phone}\\
         \BLOCK{ endif }
-
-
-\vspace{0,2cm}
-
-        \end{flushright}
-   \end{minipage}
-\end{figure}
-
-\begin{center}
-\large{\textbf{Note de frais}}\\
-\hrulefill
-\end{center}
-\begin{center}
-\begin{large}
-\begin{tabular}{>{\centering\arraybackslash} b{1.8cm} >{\centering\arraybackslash} b{7.3cm} >{\centering\arraybackslash} b{3.5cm} >{\centering\arraybackslash} b{3.5cm}}
-    \textbf{\textcolor[RGB]{255,87,51}{Quantité}} & \textbf{\textcolor[RGB]{255,87,51}{Référence}} & \textbf{\textcolor[RGB]{255,87,51}{Prix unitaire}} &  \textbf{\textcolor[RGB]{255,87,51}{Prix total}} \\
-\end{tabular}
-
-{\renewcommand{\arraystretch}{1.6}
-\begin{tabular}{|>{\centering\arraybackslash} p{1.8cm}|>{\centering\arraybackslash} p{7cm}|>{\centering\arraybackslash} p{3.5cm}|>{\centering\arraybackslash} p{3.5cm}|}
-  \hline
-   % Boucle sur les items
-   \BLOCK{ for item in items }
-   \VAR{item.quantity} & \VAR{item.reference} & \VAR{item.unit_price} \euro & \VAR{item.total_price} \euro \\
-   \BLOCK{ endfor }
-
-  \hline
-
-
-\end{tabular}}
-\end{large}
-\end{center}
-\begin{flushright}
-    \begin{large}
-    \begin{tabular}{r l}
-            % Ajout du total
-            \textbf{TOTAL :} \textbf & \VAR{final_price} \euro\\
-    \end{tabular}
-    \end{large}
-\end{flushright}
-
-\vspace{0,5cm}
-
-% Liste des pèces jointes sur les pages suivantes
-\BLOCK{ if attachment_list }
-Pièces jointes : \VAR{attachment_list}
-\BLOCK{ endif }
-
-\vspace{0,5cm}
-
-\begin{minipage}{0.5\linewidth}
-    \textbf{\textcolor[RGB]{255,87,51}{Signature du bénéficiaire}}\\
-    % Nom du bénéficiaire
-    \VAR{beneficiary_name}\\
-    % Lieu + date
-    Fait à \hspace{2.5cm} le \\
-    % Signature
+    \end{flushright}
 \end{minipage}
-\begin{minipage}{0.5\linewidth}
+
+\vspace{1cm}
+
+% --- TITRE PRINCIPAL ---
+\begin{center}
+    \large{\textbf{Note de frais}}\\
+    \hrulefill
+\end{center}
+
+% --- TABLEAU DES DÉPENSES (Version TabularX) ---
+\begin{center}
+\renewcommand{\arraystretch}{1.5} % Aère les lignes du tableau
+
+% X = Colonne extensible (prend toute la place restante et revient à la ligne auto)
+% r = aligné à droite (mieux pour les prix)
+% c = centré (pour la quantité)
+\begin{tabularx}{\linewidth}{|c|X|r|r|}
+    \hline
+    \textbf{\textcolor[RGB]{255,87,51}{Qté}} &
+    \textbf{\textcolor[RGB]{255,87,51}{Référence / Description}} &
+    \textbf{\textcolor[RGB]{255,87,51}{Prix Unitaire}} &
+    \textbf{\textcolor[RGB]{255,87,51}{Prix Total}} \\
+    \hline
+
+    % Boucle sur les items
+    \BLOCK{ for item in items }
+    \VAR{item.quantity} &
+    \VAR{item.reference} &
+    \VAR{item.unit_price} \euro &
+    \VAR{item.total_price} \euro \\
+    \hline
+    \BLOCK{ endfor }
+
+    % Ligne du TOTAL
+    \multicolumn{3}{|r|}{\textbf{TOTAL :}} &
+    \textbf{\VAR{final_price} \euro} \\
+    \hline
+
+\end{tabularx}
+\end{center}
+
+\vspace{0.5cm}
+
+
+\noindent \textbf{Pièces jointes :} Justificatifs
+
+
+\vspace{1cm}
+
+% --- SIGNATURES ---
+\noindent
+\begin{minipage}[t]{0.45\linewidth}
+    \textbf{\textcolor[RGB]{255,87,51}{Signature du bénéficiaire}}\\
+    \VAR{beneficiary_name}\\
+    Fait à \hspace{2.5cm} le \\
+
+    % Espace pour signature manuelle si besoin
+    \vspace{2cm}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.45\linewidth}
     \textbf{\textcolor[RGB]{255,87,51}{Signature de la trésorerie}}\\
-    % Nom du trésorier/de la trésorière
     \VAR{treasurer}\\
-    % Lieu + date
     Fait à \VAR{signature_location} le \VAR{date} \\
-    % Signature
+
+    \vspace{0.2cm}
+
     \BLOCK{ if signature_path }
-    \includegraphics[width = 7cm]{\VAR{signature_path}}
+    % Image responsive
+    \includegraphics[width=5cm, keepaspectratio]{\VAR{signature_path}}
     \BLOCK{ endif }
 \end{minipage}
 
-\vspace{0,5cm}
+\vspace{1cm}
 
-\underline{Demande de remboursement par :}\\
-% IBAN du bénéficiaire
-
-- \VAR{refund_mod} \VAR{beneficiary_iban}\\
+\noindent \underline{Demande de remboursement :}
+ \VAR{refund_mod} \VAR{beneficiary_iban}\\
 
 \newpage
 
-% Preuves de paiments (justificatifs)
-\begin{figure}[h!]
-    \centering % Centrer l'ensemble du bloc
-    \BLOCK{ for file in receipt_files }
-    \begin{minipage}{0.4\linewidth}\centering
-        \includegraphics[width = \linewidth]{\VAR{file}}
+% --- JUSTIFICATIFS (PAGE SUIVANTE) ---
+% On évite 'figure' ici aussi pour permettre le saut de page si beaucoup d'images
+\begin{center}
+\large{\textbf{Justificatifs}}\\
+\hrulefill
+\end{center}
+
+\vspace{0.5cm}
+
+\centering
+\BLOCK{ for file in receipt_files }
+    % On empile les images proprement
+    \begin{minipage}{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth, keepaspectratio]{\VAR{file}}
+        \vspace{0.5cm}
     \end{minipage}
-    ~
-    \BLOCK{ endfor }
-\end{figure}
-
-
+    \hfill % Espace entre les deux images sur la même ligne
+    % Astuce Jinja: retour à la ligne toutes les 2 images si besoin,
+    % mais le minipage gère souvent ça bien tout seul.
+\BLOCK{ endfor }
 
 \end{document}
