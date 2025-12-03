@@ -62,14 +62,14 @@ def load_data():
             final_price += float(total_price)
 
             RECEIPT_DIR = os.path.join(ASSETS_DIR, "justificatifs")
-            receipt_files = []
+            receipt_files_path = []
 
             for file in os.listdir(RECEIPT_DIR):
                 path = os.path.join(RECEIPT_DIR, file)
                 if os.path.isfile(path):
-                    receipt_files.append(path)
+                    receipt_files_path.append(path)
 
-    return data_dict, items, final_price, receipt_files
+    return data_dict, items, final_price, receipt_files_path
 
 
 def generate_latex(data_dict, items, final_price, receipt_files):
@@ -90,42 +90,43 @@ def generate_latex(data_dict, items, final_price, receipt_files):
         autoescape=False,
     )
 
-    template = env.get_template("main.tex")
+    template = env.get_template("export-report-template.tex")
 
-    # Mapping des clés Excel (humaines) vers les variables Jinja (code)
-    # Adapte ces clés selon le texte EXACT dans ton fichier Excel colonnes F
+    # Mapping des clés Excel (français classique) dans un dictionnaire utilisable par
+    # jinja (variable snake_case)
     context = {
+        # Mapping
+        "association_adress_1": data_dict.get("Adresse de l'association (partie 1)"),
+        "association_adress_2": data_dict.get("Adresse de l'association (partie 2)"),
+        "signature_location": data_dict.get("Fait à", "Toulouse"),
         "association_name": data_dict.get("Nom de l'association"),
-        "association_adress_1": data_dict.get(
-            "Adresse de l'association (partie 1)", ""
-        ),
-        "association_adress_2": data_dict.get(
-            "Adresse de l'association (partie 2)", ""
-        ),
         "association_email": data_dict.get("Email de l'association"),
-        "ERC_number": data_dict.get("Numéro de la note de frais"),
-        "date": datetime.now().strftime("%d/%m/%Y"),
         "mandate": data_dict.get("Mandat"),
         "treasurer": data_dict.get("Trésorier"),
         "beneficiary_name": data_dict.get(
             "Bénéficiaire (à remplir sur la feuille suivante)"
         ),
+        "refund_mod": data_dict.get("Mode de remboursement"),
+        "attachment_list": data_dict.get(
+            "Noms pièces jointes (séparées par une virgule)"
+        ),
+        "ER_number": data_dict.get("Numéro de la note de frais"),
         "beneficiary_adress_1": data_dict.get("Adresse (partie 1)"),
         "beneficiary_adress_2": data_dict.get("Adresse (partie 2)"),
         "beneficiary_phone": data_dict.get("Téléphone"),
         "beneficiary_iban": data_dict.get(
             "IBAN (remplissage auto à partir du bénéficiaire)", ""
         ),
-        "refund_mod": data_dict.get("Mode de remboursement"),
-        "lieu_signature": data_dict.get("Fait à", "Toulouse"),
-        "attachment_list": data_dict.get(
-            "Noms pièces jointes (séparées par une virgule)"
-        ),
+        # Mapping des items
         "items": items,
         "final_price": f"{final_price:.2f}",
+        # Mapping des justificatifs
         "receipt_files": receipt_files,
+        # Mapping de la date du jour
+        "date": datetime.now().strftime("%d/%m/%Y"),
     }
 
+    # Adresse de la signature si nom renseigné
     if data_dict.get("Nom du fichier signature (vide si pas)") != "":
         context["signature_path"] = os.path.join(
             ASSETS_DIR, data_dict.get("Nom du fichier signature (vide si pas)")
@@ -133,6 +134,7 @@ def generate_latex(data_dict, items, final_price, receipt_files):
     else:
         context["signature_path"] = ""
 
+    # Adresse du logo si nom renseigné
     if data_dict.get("Nom du fichier logo (vide si pas)") != "":
         context["logo_path"] = os.path.join(
             ASSETS_DIR, data_dict.get("Nom du fichier logo (vide si pas)")
@@ -143,10 +145,12 @@ def generate_latex(data_dict, items, final_price, receipt_files):
     return template.render(context)
 
 
-def compile_pdf(tex_content, output_filename="note_de_frais.pdf"):
+def compile_pdf(tex_content, ER_number, beneficiary_name):
     """Compile le code LaTeX en PDF via pdflatex."""
 
     tex_file_path = os.path.join(OUTPUT_DIR, "temp.tex")
+    output_filename = f"{ER_number:03d} - Note de frais ({beneficiary_name}).pdf"
+    # padding de 3 caractère, remplissage avec "0", sur des nombres décimaux (d)
 
     # Écriture du fichier .tex temporaire
     with open(tex_file_path, "w", encoding="utf-8") as f:
@@ -158,7 +162,6 @@ def compile_pdf(tex_content, output_filename="note_de_frais.pdf"):
         subprocess.run(
             ["tectonic", "-o", OUTPUT_DIR, tex_file_path],
             check=True,
-            # stdout=subprocess.DEVNULL # Tu peux commenter ça au début pour voir s'il télécharge bien
         )
 
         # Renommer le fichier de sortie
@@ -184,8 +187,12 @@ def compile_pdf(tex_content, output_filename="note_de_frais.pdf"):
 
 if __name__ == "__main__":
     try:
-        data, items, total, receipt = load_data()
-        latex_code = generate_latex(data, items, total, receipt)
-        compile_pdf(latex_code, "ma_note_de_frais.pdf")
+        data, items, final_price, receipt_files_path = load_data()
+        latex_code = generate_latex(data, items, final_price, receipt_files_path)
+
+        beneficiary_name = data.get("Bénéficiaire (à remplir sur la feuille suivante)")
+        ER_number = data.get("Numéro de la note de frais")
+        compile_pdf(latex_code, ER_number, beneficiary_name)
+
     except Exception as e:
         print(f"Une erreur est survenue : {e}")

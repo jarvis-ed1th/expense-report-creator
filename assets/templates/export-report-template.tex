@@ -29,7 +29,7 @@
         \begin{center}
         \begin{Large}
          % Numéro de note de frais  : année du mandat + numéro de la note de frais
-        \textbf{Note de frais \no \VAR{ERC_number}} : \VAR{mandate}-\VAR{ERC_number}\\
+        \textbf{Note de frais \no \VAR{ER_number}} : \VAR{mandate}-\VAR{ER_number}\\
         \end{Large}
         % Date du jour
         Faite le \VAR{date}\\
@@ -37,7 +37,7 @@
         \hrulefill\\
         \newline
         \begin{flushright}
-        \textbf{\textcolor[RGB]{255,87,51}{Bénéficiaire\\}}
+        \textbf{\textcolor[RGB]{255,87,51}{Bénéficiaire}}\\
         % Nom et prénom du bénéficiaire
         \VAR{beneficiary_name}\\
         % Adresse du bénéficiaire
@@ -110,7 +110,7 @@ Pièces jointes : \VAR{attachment_list}
     % Nom du trésorier/de la trésorière
     \VAR{treasurer}\\
     % Lieu + date
-    Fait à \VAR{lieu_signature} le \VAR{date} \\
+    Fait à \VAR{signature_location} le \VAR{date} \\
     % Signature
     \BLOCK{ if signature_path }
     \includegraphics[width = 7cm]{\VAR{signature_path}}
