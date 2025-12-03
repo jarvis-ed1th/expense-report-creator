@@ -6,10 +6,12 @@ import jinja2
 import pandas as pd
 
 # Configuration des chemins
-ASSETS_DIR = os.path.join(os.getcwd(), "assets")
-TEMPLATES_DIR = os.path.join(ASSETS_DIR, "templates")
-OUTPUT_DIR = os.path.join(ASSETS_DIR, "output")
-DATA_FILE = os.path.join(ASSETS_DIR, "data.xlsx")
+ROOT_DIR = os.getcwd()
+ASSETS_DIR = os.path.join(ROOT_DIR, ".system", "assets")
+OUTPUT_DIR = os.path.join(ROOT_DIR, "SORTIE_PDF")
+A_MODIFIER_DIR = os.path.join(ROOT_DIR, "A_MODIFIER")
+RECEIPT_DIR = os.path.join(A_MODIFIER_DIR, "justificatifs")
+DATA_FILE = os.path.join(A_MODIFIER_DIR, "data.xlsx")
 
 # Créer le dossier output s'il n'existe pas
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -61,7 +63,6 @@ def load_data():
             )
             final_price += float(total_price)
 
-            RECEIPT_DIR = os.path.join(ASSETS_DIR, "justificatifs")
             receipt_files_path = []
 
             for file in os.listdir(RECEIPT_DIR):
@@ -77,7 +78,7 @@ def generate_latex(data_dict, items, final_price, receipt_files):
 
     # Configuration de Jinja pour LaTeX (syntaxe personnalisée pour éviter les conflits avec {})
     env = jinja2.Environment(
-        loader=jinja2.FileSystemLoader(TEMPLATES_DIR),
+        loader=jinja2.FileSystemLoader(ASSETS_DIR),
         block_start_string=r"\BLOCK{",
         block_end_string="}",
         variable_start_string=r"\VAR{",
@@ -95,7 +96,7 @@ def generate_latex(data_dict, items, final_price, receipt_files):
     # Mapping des clés Excel (français classique) dans un dictionnaire utilisable par
     # jinja (variable snake_case)
     context = {
-        # Mapping
+        # Mapping des métadonnées
         "association_adress_1": data_dict.get("Adresse de l'association (partie 1)"),
         "association_adress_2": data_dict.get("Adresse de l'association (partie 2)"),
         "signature_location": data_dict.get("Fait à", "Toulouse"),
@@ -126,18 +127,18 @@ def generate_latex(data_dict, items, final_price, receipt_files):
         "date": datetime.now().strftime("%d/%m/%Y"),
     }
 
-    # Adresse de la signature si nom renseigné
+    # Adresse de la signature si le nom est renseigné
     if data_dict.get("Nom du fichier signature (vide si pas)") != "":
         context["signature_path"] = os.path.join(
-            ASSETS_DIR, data_dict.get("Nom du fichier signature (vide si pas)")
+            A_MODIFIER_DIR, data_dict.get("Nom du fichier signature (vide si pas)")
         )
     else:
         context["signature_path"] = ""
 
-    # Adresse du logo si nom renseigné
+    # Adresse du logo si le nom est renseigné
     if data_dict.get("Nom du fichier logo (vide si pas)") != "":
         context["logo_path"] = os.path.join(
-            ASSETS_DIR, data_dict.get("Nom du fichier logo (vide si pas)")
+            A_MODIFIER_DIR, data_dict.get("Nom du fichier logo (vide si pas)")
         )
     else:
         context["logo_path"] = ""
