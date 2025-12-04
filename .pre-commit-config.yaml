@@ -26,3 +26,13 @@ repos:
     hooks:
       - id: flake8
         additional_dependencies: [flake8-pyproject]
+
+#  - repo: local
+#    hooks:
+#      - id: export-requirements
+#        name: Export requirements.txt
+#        language: system
+#        pass_filenames: false
+#        entry: poetry -C .system export -f requirements.txt --output .system/requirements.txt --without-hashes
+        # Ce hook ne se déclenchera que si vous touchez à ces deux fichiers
+        # files: ^system/(pyproject\.toml|poetry\.lock)$
