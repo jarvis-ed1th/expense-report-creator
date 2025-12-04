@@ -3,6 +3,7 @@ SORTIE_PDF/
 SORTIE_LATEX/
 
 # Dossiers et fichiers généraux
+.venv/
 .DS_Store
 *.log
 *.swp

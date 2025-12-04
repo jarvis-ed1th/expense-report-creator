@@ -1,5 +1,6 @@
 import os
 import subprocess
+import platform
 from datetime import datetime
 
 import jinja2
@@ -16,7 +17,6 @@ DATA_FILE = os.path.join(A_MODIFIER_DIR, "data.xlsx")
 # Créer le dossier output s'il n'existe pas
 os.makedirs(OUTPUT_PDF_DIR, exist_ok=True)
 os.makedirs(OUTPUT_TEX_DIR, exist_ok=True)
-
 
 def load_data():
     """Enregistre les données de data.xlsx.
@@ -87,7 +87,7 @@ def load_receipts():
     for file in os.listdir(RECEIPT_DIR):
         path = os.path.join(RECEIPT_DIR, file)
         if os.path.isfile(path):
-            receipt_file_paths.append(path)
+            receipt_file_paths.append(path.replace('\\', '/'))
 
     return receipt_file_paths
 
@@ -163,7 +163,7 @@ def generate_latex(data_dict, items, final_price, receipt_file_paths):
     if data_dict.get("Nom du fichier signature (vide si pas)") != "":
         context["signature_path"] = os.path.join(
             A_MODIFIER_DIR, data_dict.get("Nom du fichier signature (vide si pas)")
-        )
+        ).replace('\\', '/')
     else:
         context["signature_path"] = ""
 
@@ -171,7 +171,7 @@ def generate_latex(data_dict, items, final_price, receipt_file_paths):
     if data_dict.get("Nom du fichier logo (vide si pas)") != "":
         context["logo_path"] = os.path.join(
             A_MODIFIER_DIR, data_dict.get("Nom du fichier logo (vide si pas)")
-        )
+        ).replace('\\', '/')
     else:
         context["logo_path"] = ""
 
@@ -204,7 +204,12 @@ def export_tex_pdf(tex_content, ER_number, beneficiary_name):
     with open(generated_tex, "w", encoding="utf-8") as file:
         file.write(tex_content)
 
-    TECTONIC_PATH = os.path.join(ROOT_DIR, ".venv", "bin", "tectonic")
+    # Vérifie le système d'exploitation et adapte le chemin en fonction.
+    if platform.system() == "Windows":
+        TECTONIC_PATH = os.path.join(ROOT_DIR, ".venv", "Scripts", "tectonic.exe")
+    else:
+        TECTONIC_PATH = os.path.join(ROOT_DIR, ".venv", "bin", "tectonic")
+
     try:
         subprocess.run(
             [TECTONIC_PATH, "-o", OUTPUT_PDF_DIR, generated_tex],

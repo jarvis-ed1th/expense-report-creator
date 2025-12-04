@@ -20,13 +20,10 @@ packages = [{include = "expense_report_creator", from = "src"}]
 profile = "black"
 
 [tool.flake8]
-# On s'aligne sur Black (88)
-max-line-length = 88
-
 # On ignore les erreurs qui sont en conflit direct avec le style de Black
 extend-ignore = [
     "E203",  # Espace avant ':' (Black le fait parfois pour les slices)
-    "E501"   # OPTIONNEL : Si vous voulez laisser Black gérer la longueur seul
+    "E501"   # Longueur max black=88 vs flake8=79, on ignore l'erreur de longeur
 ]
 
 [build-system]
