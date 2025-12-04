@@ -14,7 +14,7 @@ Le script est entièrement documenté en convention Google. Je me suis assuré d
 ## Installation
 ### Prérequis
 - Python 3.12
-- Curl
+- Curl (pour Linux et Mac/OS)
 - Logiciel de lecture de fichiers xlsx (OnlyOffice par exemple)
 
 ### Configuration initiale
@@ -26,10 +26,10 @@ Le script est entièrement documenté en convention Google. Je me suis assuré d
 
 2. Lancer une première fois le script d'export correspondant à votre système d'exploitation pour créer les dossiers de sorties et vérifier qu'il n'y a pas d'erreur :
 - **Linux/MacOS** :
-    - Clic droit sur `NDF_GENERATOR.sh`
+    - Clic droit sur `NDF_Generator.sh`
     - Cliquer sur "Exécuter" ou équivalent
 - **Windows**
-
+    - Double-clic sur `NDF_Generator.bat`
 
 ## Utilisation
 ### La structure
