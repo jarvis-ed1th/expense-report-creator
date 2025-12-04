@@ -4,13 +4,13 @@
 \usepackage{eurosym}
 \usepackage{colortbl}
 \usepackage{graphicx}
+\usepackage[french]{babel}
 \usepackage{tabularx}
 \pagestyle{empty}
 \setlength{\parindent}{0pt} % Empêche les indentations de première ligne
 \begin{document}
 
 % --- EN-TÊTE ---
-\noindent 
 \begin{minipage}[t]{.3\linewidth}
 
     \vspace{0pt}
@@ -27,7 +27,7 @@
     \VAR{association_adress_2}\\
     \VAR{association_email}\\
 \end{minipage}
-\hfill 
+\hfill
 \begin{minipage}[t]{.55\linewidth}
     \hrulefill
     \begin{center}
@@ -97,13 +97,12 @@
 \vspace{0.5cm}
 
 
-\noindent \textbf{Pièces jointes :} Justificatifs
+\textbf{Pièces jointes :} Justificatifs
 
 
 \vspace{1cm}
 
 % --- SIGNATURES ---
-\noindent
 \begin{minipage}[t]{0.45\linewidth}
     \textbf{\textcolor[RGB]{255,87,51}{Signature du bénéficiaire}}\\
     \VAR{beneficiary_name}\\
@@ -128,8 +127,8 @@
 
 \vspace{1cm}
 
-\noindent \underline{Demande de remboursement :}
- \VAR{refund_mod} \VAR{beneficiary_iban}\\
+\underline{Demande de remboursement :}
+\VAR{refund_mod} \VAR{beneficiary_iban}\\
 
 \newpage
 

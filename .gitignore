@@ -1,5 +1,6 @@
-# Dossier de sortie
+# Dossiers de sortie
 SORTIE_PDF/
+SORTIE_LATEX/
 
 # Dossiers et fichiers généraux
 .DS_Store

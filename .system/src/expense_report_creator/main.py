@@ -15,21 +15,22 @@ DATA_FILE = os.path.join(A_MODIFIER_DIR, "data.xlsx")
 
 # Créer le dossier output s'il n'existe pas
 os.makedirs(OUTPUT_PDF_DIR, exist_ok=True)
+os.makedirs(OUTPUT_TEX_DIR, exist_ok=True)
 
 
 def load_data():
     """Enregistre les données de data.xlsx.
-    
+
     Récupération des informations de l'association, du bénéficiaire et du trésorier
     dans un dataframe, ainsi que des lignes de frais dans une liste de dictionnaires.
-    
+
     Returns:
         data_dict (dict): Informations sur l'association, le bénéficiaire et le
             trésorier.
         items (list of dict): Liste de dictionnaire contenant les champs des colonnes
             et les valeurs associées, pour chacune des lignes de la note de frais.
         final_price (float): Montant du remboursement final.
-        """
+    """
 
     # Lecture des informations du Tableau de bord (Colonnes F et G).
     df_data = pd.read_excel(
@@ -71,15 +72,15 @@ def load_data():
                     "total_price": f"{total_price:.2f}",
                 }
             )
-    
+
             final_price += float(total_price)
 
     return data_dict, items, final_price
-    
 
-def load_receipts ():
+
+def load_receipts():
     """Sauvegarde les chemins d'accès aux justificatifs.
-    
+
     Returns:
         receipt_file_paths (list of str): Liste des chemins des fichiers
             justificatifs à inclure dans le rapport LaTeX.
@@ -201,7 +202,7 @@ def export_tex_pdf(tex_content, ER_number, beneficiary_name):
     output_TEX_filename = f"{ER_number:03d} - Note de frais ({beneficiary_name}).tex"
     # padding de 3 caractère, remplissage avec "0", sur des nombres décimaux (d)
     final_pdf = os.path.join(OUTPUT_PDF_DIR, output_PDF_filename)
-    final_tex = os.path.join(OUTPUT_PDF_DIR, output_TEX_filename)
+    final_tex = os.path.join(OUTPUT_TEX_DIR, output_TEX_filename)
 
     # Écriture du fichier .tex temporaire
     with open(generated_tex, "w", encoding="utf-8") as file:
@@ -210,9 +211,9 @@ def export_tex_pdf(tex_content, ER_number, beneficiary_name):
     try:
         subprocess.run(
             ["tectonic", "-o", OUTPUT_PDF_DIR, generated_tex],
-            check=True,          # Lève une erreur si le script plante
-            capture_output=True, # Rend tectonic silencieux
-            text=True            # Permet de lire la sortie comme du texte (string)
+            check=True,  # Lève une erreur si le script plante
+            capture_output=True,  # Rend tectonic silencieux
+            text=True,  # Permet de lire la sortie comme du texte (string)
         )
 
         if os.path.exists(generated_pdf):
@@ -238,10 +239,13 @@ def export_tex_pdf(tex_content, ER_number, beneficiary_name):
 
 if __name__ == "__main__":
     try:
-        data_dict, items, final_price, receipt_files_path = load_data()
+        data_dict, items, final_price = load_data()
+        receipt_files_path = load_receipts()
         latex_code = generate_latex(data_dict, items, final_price, receipt_files_path)
 
-        beneficiary_name = data_dict.get("Bénéficiaire (à remplir sur la feuille suivante)")
+        beneficiary_name = data_dict.get(
+            "Bénéficiaire (à remplir sur la feuille suivante)"
+        )
         ER_number = data_dict.get("Numéro de la note de frais")
         export_tex_pdf(latex_code, ER_number, beneficiary_name)
 
