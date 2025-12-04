@@ -34,12 +34,8 @@ def load_data():
 
     # Lecture des informations du Tableau de bord (Colonnes F et G).
     df_data = pd.read_excel(
-        DATA_FILE,
-        sheet_name="Tableau de bord",
-        usecols="F:G",
+        DATA_FILE, sheet_name="Tableau de bord", usecols="F:G", names=["key", "value"]
     )
-
-    df_data.columns = ["key", "value"]
 
     # Création du dictionnaire en utilisant les clés non-vides.
     data_dict = {}
@@ -208,9 +204,10 @@ def export_tex_pdf(tex_content, ER_number, beneficiary_name):
     with open(generated_tex, "w", encoding="utf-8") as file:
         file.write(tex_content)
 
+    TECTONIC_PATH = os.path.join(ROOT_DIR, ".venv", "bin", "tectonic")
     try:
         subprocess.run(
-            ["tectonic", "-o", OUTPUT_PDF_DIR, generated_tex],
+            [TECTONIC_PATH, "-o", OUTPUT_PDF_DIR, generated_tex],
             check=True,  # Lève une erreur si le script plante
             capture_output=True,  # Rend tectonic silencieux
             text=True,  # Permet de lire la sortie comme du texte (string)
