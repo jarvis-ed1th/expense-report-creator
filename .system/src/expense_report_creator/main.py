@@ -8,20 +8,30 @@ import pandas as pd
 # Configuration des chemins
 ROOT_DIR = os.getcwd()
 ASSETS_DIR = os.path.join(ROOT_DIR, ".system", "assets")
-OUTPUT_DIR = os.path.join(ROOT_DIR, "SORTIE_PDF")
+OUTPUT_PDF_DIR = os.path.join(ROOT_DIR, "SORTIE_PDF")
+OUTPUT_TEX_DIR = os.path.join(ROOT_DIR, "SORTIE_LATEX")
 A_MODIFIER_DIR = os.path.join(ROOT_DIR, "A_MODIFIER")
-RECEIPT_DIR = os.path.join(A_MODIFIER_DIR, "justificatifs")
 DATA_FILE = os.path.join(A_MODIFIER_DIR, "data.xlsx")
 
 # Créer le dossier output s'il n'existe pas
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+os.makedirs(OUTPUT_PDF_DIR, exist_ok=True)
 
 
 def load_data():
-    """Lit le fichier Excel et sépare les items des métadonnées."""
+    """Enregistre les données de data.xlsx.
+    
+    Récupération des informations de l'association, du bénéficiaire et du trésorier
+    dans un dataframe, ainsi que des lignes de frais dans une liste de dictionnaires.
+    
+    Returns:
+        data_dict (dict): Informations sur l'association, le bénéficiaire et le
+            trésorier.
+        items (list of dict): Liste de dictionnaire contenant les champs des colonnes
+            et les valeurs associées, pour chacune des lignes de la note de frais.
+        final_price (float): Montant du remboursement final.
+        """
 
-    # 1. Lire les métadonnées (Colonnes F et G - Index 5 et 6)
-    # On suppose que les données clés/valeurs commencent ligne 2 (index 1)
+    # Lecture des informations du Tableau de bord (Colonnes F et G).
     df_data = pd.read_excel(
         DATA_FILE,
         sheet_name="Tableau de bord",
@@ -30,19 +40,19 @@ def load_data():
 
     df_data.columns = ["key", "value"]
 
-    # Nettoyage des métadonnées pour en faire un dictionnaire
+    # Création du dictionnaire en utilisant les clés non-vides.
     data_dict = {}
     for _, row in df_data.iterrows():
         if pd.notna(row["key"]):
-            # Nettoyage des clés pour qu'elles soient utilisables en variable
+            # Utilisation de strip pour supprimer les espaces involontaires.
             key = str(row["key"]).strip()
             val = row["value"] if pd.notna(row["value"]) else ""
             data_dict[key] = val
 
-    # 2. Lire les lignes de frais (Colonnes A à D)
+    # Lecture des lignes de frais et enregistrement dans une liste lorsque "Référence"
+    # non vide.
     df_items = pd.read_excel(DATA_FILE, sheet_name="Tableau de bord", usecols="A:D")
 
-    # On ne garde que les lignes où "Référence" n'est pas vide
     items = []
     final_price = 0.0
 
@@ -61,20 +71,50 @@ def load_data():
                     "total_price": f"{total_price:.2f}",
                 }
             )
+    
             final_price += float(total_price)
 
-            receipt_files_path = []
+    return data_dict, items, final_price
+    
 
-            for file in os.listdir(RECEIPT_DIR):
-                path = os.path.join(RECEIPT_DIR, file)
-                if os.path.isfile(path):
-                    receipt_files_path.append(path)
+def load_receipts ():
+    """Sauvegarde les chemins d'accès aux justificatifs.
+    
+    Returns:
+        receipt_file_paths (list of str): Liste des chemins des fichiers
+            justificatifs à inclure dans le rapport LaTeX.
+    """
+    RECEIPT_DIR = os.path.join(A_MODIFIER_DIR, "justificatifs")
+    receipt_file_paths = []
 
-    return data_dict, items, final_price, receipt_files_path
+    for file in os.listdir(RECEIPT_DIR):
+        path = os.path.join(RECEIPT_DIR, file)
+        if os.path.isfile(path):
+            receipt_file_paths.append(path)
+
+    return receipt_file_paths
 
 
-def generate_latex(data_dict, items, final_price, receipt_files):
-    """Injecte les données dans le template LaTeX."""
+def generate_latex(data_dict, items, final_price, receipt_file_paths):
+    """Création d'un fichier latex à partir des données fournies.
+
+    Cette fonction utilise le moteur de template Jinja2 pour injecter les données
+    fournies (détails de l'association, bénéficiaire, items de dépenses, etc.) dans un
+    template LaTeX prédéfini ('export-report-template.tex').
+
+    Args:
+        data_dict (dict): Informations sur l'association, le bénéficiaire et le
+            trésorier.
+        items (list of dict): Liste de dictionnaire contenant les champs des colonnes
+            et les valeurs associées, pour chacune des lignes de la note de frais.
+        final_price (float): Montant du remboursement final.
+        receipt_file_paths (list of str): Liste des chemins des fichiers
+            justificatifs à inclure dans le rapport LaTeX.
+
+    Returns:
+        str: La note de frais complète rendue au format code LaTeX, prête à
+            être enregistrée dans un fichier .tex.
+    """
 
     # Configuration de Jinja pour LaTeX (syntaxe personnalisée pour éviter les conflits avec {})
     env = jinja2.Environment(
@@ -85,18 +125,16 @@ def generate_latex(data_dict, items, final_price, receipt_files):
         variable_end_string="}",
         comment_start_string=r"\#{",
         comment_end_string="}",
-        line_statement_prefix="%%",
-        line_comment_prefix="%#",
         trim_blocks=True,
         autoescape=False,
     )
 
     template = env.get_template("export-report-template.tex")
 
-    # Mapping des clés Excel (français classique) dans un dictionnaire utilisable par
-    # jinja (variable snake_case)
+    # Création d'un dictionnaire pour récupérer les valeurs du dictionnaire contenant
+    # les clés en français, les items et les chemins des justificatifs, et les
+    # enregistrer avec leur valeur utilisable et des clés conventionnelles.
     context = {
-        # Mapping des métadonnées
         "association_adress_1": data_dict.get("Adresse de l'association (partie 1)"),
         "association_adress_2": data_dict.get("Adresse de l'association (partie 2)"),
         "signature_location": data_dict.get("Fait à", "Toulouse"),
@@ -118,16 +156,13 @@ def generate_latex(data_dict, items, final_price, receipt_files):
         "beneficiary_iban": data_dict.get(
             "IBAN (remplissage auto à partir du bénéficiaire)", ""
         ),
-        # Mapping des items
         "items": items,
         "final_price": f"{final_price:.2f}",
-        # Mapping des justificatifs
-        "receipt_files": receipt_files,
-        # Mapping de la date du jour
+        "receipt_files": receipt_file_paths,
         "date": datetime.now().strftime("%d/%m/%Y"),
     }
 
-    # Adresse de la signature si le nom est renseigné
+    # Chemin de la signature si le nom est renseigné
     if data_dict.get("Nom du fichier signature (vide si pas)") != "":
         context["signature_path"] = os.path.join(
             A_MODIFIER_DIR, data_dict.get("Nom du fichier signature (vide si pas)")
@@ -135,7 +170,7 @@ def generate_latex(data_dict, items, final_price, receipt_files):
     else:
         context["signature_path"] = ""
 
-    # Adresse du logo si le nom est renseigné
+    # Chemin du logo si le nom est renseigné
     if data_dict.get("Nom du fichier logo (vide si pas)") != "":
         context["logo_path"] = os.path.join(
             A_MODIFIER_DIR, data_dict.get("Nom du fichier logo (vide si pas)")
@@ -146,54 +181,70 @@ def generate_latex(data_dict, items, final_price, receipt_files):
     return template.render(context)
 
 
-def compile_pdf(tex_content, ER_number, beneficiary_name):
-    """Compile le code LaTeX en PDF via pdflatex."""
+def export_tex_pdf(tex_content, ER_number, beneficiary_name):
+    """Créer un fichier LaTeX à partir du contenu, et le compile en PDF.
 
-    tex_file_path = os.path.join(OUTPUT_DIR, "temp.tex")
-    output_filename = f"{ER_number:03d} - Note de frais ({beneficiary_name}).pdf"
+    Création de 2 fichiers dans des répertoires différents, un pour le PDF compilé
+    en version finale via tectonic, et un pour le fichier LaTeX source permettant de
+    modifier facilement la note de frais via un outil externe comme overleaf.
+
+    Args:
+        tex_content (str): La note de frais complète au format code LaTeX.
+        ER_number (int): Numéro unique de la note de frais.
+        beneficiary_name (str): Nom du bénéficiaire (utilisé pour le nom
+            du fichier).
+    """
+
+    generated_tex = os.path.join(OUTPUT_TEX_DIR, "temp.tex")
+    generated_pdf = os.path.join(OUTPUT_PDF_DIR, "temp.pdf")
+    output_PDF_filename = f"{ER_number:03d} - Note de frais ({beneficiary_name}).pdf"
+    output_TEX_filename = f"{ER_number:03d} - Note de frais ({beneficiary_name}).tex"
     # padding de 3 caractère, remplissage avec "0", sur des nombres décimaux (d)
+    final_pdf = os.path.join(OUTPUT_PDF_DIR, output_PDF_filename)
+    final_tex = os.path.join(OUTPUT_PDF_DIR, output_TEX_filename)
 
     # Écriture du fichier .tex temporaire
-    with open(tex_file_path, "w", encoding="utf-8") as f:
-        f.write(tex_content)
-
-    print(f"Compilation de {output_filename}...")
+    with open(generated_tex, "w", encoding="utf-8") as file:
+        file.write(tex_content)
 
     try:
         subprocess.run(
-            ["tectonic", "-o", OUTPUT_DIR, tex_file_path],
-            check=True,
+            ["tectonic", "-o", OUTPUT_PDF_DIR, generated_tex],
+            check=True,          # Lève une erreur si le script plante
+            capture_output=True, # Rend tectonic silencieux
+            text=True            # Permet de lire la sortie comme du texte (string)
         )
-
-        # Renommer le fichier de sortie
-        final_pdf = os.path.join(OUTPUT_DIR, output_filename)
-        generated_pdf = os.path.join(OUTPUT_DIR, "temp.pdf")
 
         if os.path.exists(generated_pdf):
             if os.path.exists(final_pdf):
                 os.remove(final_pdf)
             os.rename(generated_pdf, final_pdf)
-            print(f"Succès ! Fichier généré : {final_pdf}")
 
-        # Nettoyage des fichiers temporaires (.aux, .log, .tex)
-        for ext in [".aux", ".log", ".tex"]:
-            f = os.path.join(OUTPUT_DIR, f"temp{ext}")
+        if os.path.exists(generated_tex):
+            if os.path.exists(final_tex):
+                os.remove(final_tex)
+            os.rename(generated_tex, final_tex)
+
+        # Nettoyage des fichiers temporaires (.aux, .log)
+        for ext in [".aux", ".log"]:
+            f = os.path.join(OUTPUT_TEX_DIR, f"temp{ext}")
             if os.path.exists(f):
                 os.remove(f)
 
-    except subprocess.CalledProcessError as e:
+    except Exception as e:
         print(f"Erreur: {e}")
-        # En cas d'erreur, on peut regarder temp.log dans output/
+        input("\nAppuyez sur Entrée pour quitter...")
 
 
 if __name__ == "__main__":
     try:
-        data, items, final_price, receipt_files_path = load_data()
-        latex_code = generate_latex(data, items, final_price, receipt_files_path)
+        data_dict, items, final_price, receipt_files_path = load_data()
+        latex_code = generate_latex(data_dict, items, final_price, receipt_files_path)
 
-        beneficiary_name = data.get("Bénéficiaire (à remplir sur la feuille suivante)")
-        ER_number = data.get("Numéro de la note de frais")
-        compile_pdf(latex_code, ER_number, beneficiary_name)
+        beneficiary_name = data_dict.get("Bénéficiaire (à remplir sur la feuille suivante)")
+        ER_number = data_dict.get("Numéro de la note de frais")
+        export_tex_pdf(latex_code, ER_number, beneficiary_name)
 
     except Exception as e:
         print(f"Une erreur est survenue : {e}")
+        input("\nAppuyez sur Entrée pour quitter...")
