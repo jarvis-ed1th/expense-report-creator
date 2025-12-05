@@ -1,6 +1,6 @@
 import os
-import subprocess
 import platform
+import subprocess
 from datetime import datetime
 
 import jinja2
@@ -17,6 +17,7 @@ DATA_FILE = os.path.join(A_MODIFIER_DIR, "data.xlsx")
 # Créer le dossier output s'il n'existe pas
 os.makedirs(OUTPUT_PDF_DIR, exist_ok=True)
 os.makedirs(OUTPUT_TEX_DIR, exist_ok=True)
+
 
 def load_data():
     """Enregistre les données de data.xlsx.
@@ -71,6 +72,9 @@ def load_data():
 
             final_price += float(total_price)
 
+    if data_dict["Remboursement total (auto si vide)"] != "":
+        final_price = data_dict["Remboursement total (auto si vide)"]
+
     return data_dict, items, final_price
 
 
@@ -87,7 +91,7 @@ def load_receipts():
     for file in os.listdir(RECEIPT_DIR):
         path = os.path.join(RECEIPT_DIR, file)
         if os.path.isfile(path):
-            receipt_file_paths.append(path.replace('\\', '/'))
+            receipt_file_paths.append(path.replace("\\", "/"))
 
     return receipt_file_paths
 
@@ -163,7 +167,7 @@ def generate_latex(data_dict, items, final_price, receipt_file_paths):
     if data_dict.get("Nom du fichier signature (vide si pas)") != "":
         context["signature_path"] = os.path.join(
             A_MODIFIER_DIR, data_dict.get("Nom du fichier signature (vide si pas)")
-        ).replace('\\', '/')
+        ).replace("\\", "/")
     else:
         context["signature_path"] = ""
 
@@ -171,7 +175,7 @@ def generate_latex(data_dict, items, final_price, receipt_file_paths):
     if data_dict.get("Nom du fichier logo (vide si pas)") != "":
         context["logo_path"] = os.path.join(
             A_MODIFIER_DIR, data_dict.get("Nom du fichier logo (vide si pas)")
-        ).replace('\\', '/')
+        ).replace("\\", "/")
     else:
         context["logo_path"] = ""
 

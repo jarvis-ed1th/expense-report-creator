@@ -1,15 +1,17 @@
 # Expense Report Creator
 
-Créateur de notes de frais pour trésorier d'association.
+Générateur de notes de frais pour automatiser le travail des trésoriers au sein d'une association.
 
 ## À propos
 
-Ce projet est un script Python conçu pour exporter des données facilement modifiables et enregistrables d'un fichier xlsx en un format PDF. Le fichier intermédiaire LaTeX est aussi exporté pour modifications potentielles.
+Ce projet est un script Python conçu pour facilement créer des notes de frais à partir d'un template adapté pour les associations. Il permet d'exporter des données d'un tableau xlsx en une note de frais PDF. Le tableau xlsx fourni permet d'enregistrer facilement les informations du trésorier et de l'association, ainsi que d'enregistrer les différents bénéficiaires pour des futurs remboursements. Le fichier intermédiaire LaTeX est aussi exporté pour modifications manuelles si besoin.
 
-Le script est entièrement documenté en convention Google. Je me suis assuré du respect de la PEP 8 via l'utilisation d'une automatisation avec pre-commit des outils suivants :
+Le script est entièrement documenté en convention Google. Étant adapté pour un public français, le programme est documenté dans cette langue. Cependant il est codé en anglais pour être accessible au plus grand nombre. Je me suis assuré du respect de la PEP 8 via l'utilisation d'une automatisation avec pre-commit des outils suivants :
 - isort
 - black
 - flake8
+
+Le programme fonctionne sur Linux, MacOS et Windows.
 
 ## Installation
 ### Prérequis
@@ -25,11 +27,11 @@ Le script est entièrement documenté en convention Google. Je me suis assuré d
     ```
 
 2. Lancer une première fois le script d'export correspondant à votre système d'exploitation pour créer les dossiers de sorties et vérifier qu'il n'y a pas d'erreur :
-- **Linux/MacOS** :
-    - Clic droit sur `NDF_Generator.sh`
-    - Cliquer sur "Exécuter" ou équivalent
-- **Windows**
-    - Double-clic sur `NDF_Generator.bat`
+    - **Linux/MacOS** :
+        - Clic droit sur `NDF_Generator.sh`
+        - Cliquer sur "Exécuter" ou équivalent
+    - **Windows**
+        - Double-clic sur `NDF_Generator.bat`
 
 ## Utilisation
 ### La structure
@@ -63,7 +65,11 @@ Les bénéficiaires sont à enregistrer dans la feuille "Bénéficiaires".
 	<img src=".system/assets/src_readme/data.png" alt="alt-text" width="600px"/>
 </div>
 
-### Exemple de résultat
+### Génération de la note de frais
+
+Pour générer la note de frais, il suffit alors de lancer le script d'export correspondant à son système d'exploitation, exactement comme lors de la [seconde étape de l'installation.](#Configuration-initiale)
+
+### Exemple de note de frais
 <div align="center">
 	<img src=".system/assets/src_readme/PDF.png" alt="alt-text" width="400px"/>
 </div>
