@@ -5,6 +5,7 @@ from datetime import datetime
 
 import jinja2
 import pandas as pd
+from PIL import Image, ImageOps
 
 # Configuration des chemins
 ROOT_DIR = os.getcwd()
@@ -92,6 +93,11 @@ def load_receipts():
         path = os.path.join(RECEIPT_DIR, file)
         if os.path.isfile(path):
             receipt_file_paths.append(path.replace("\\", "/"))
+
+            # Enregistre les images selon leur orientation exif (qui n'est pas lu par LaTeX).
+            image = Image.open(path)
+            transposed_image = ImageOps.exif_transpose(image)
+            transposed_image.save(path)
 
     return receipt_file_paths
 
