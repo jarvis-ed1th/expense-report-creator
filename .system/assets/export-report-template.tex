@@ -5,7 +5,8 @@
 \usepackage{colortbl}
 \usepackage{graphicx}
 \usepackage[french]{babel}
-\usepackage{tabularx}
+\usepackage{ltablex}
+\keepXColumns % Indispensable pour garder le comportement de tabularx
 \pagestyle{empty}
 \setlength{\parindent}{0pt} % Empêche les indentations de première ligne
 \begin{document}
@@ -71,26 +72,34 @@
 % c = centré (conventionnel pour la quantité)
 \begin{tabularx}{\linewidth}{|c|X|r|r|}
     \hline
-    \textbf{\textcolor[RGB]{255,87,51}{Qté}} &
-    \textbf{\textcolor[RGB]{255,87,51}{Référence / Description}} &
-    \textbf{\textcolor[RGB]{255,87,51}{Prix Unitaire}} &
+    \textbf{\textcolor[RGB]{255,87,51}{Qté}} & 
+    \textbf{\textcolor[RGB]{255,87,51}{Référence / Description}} & 
+    \textbf{\textcolor[RGB]{255,87,51}{Prix Unitaire}} & 
     \textbf{\textcolor[RGB]{255,87,51}{Prix Total}} \\
     \hline
+    \endfirsthead % Uniquement pour le début du tableau sur la 1ère page
+
+    \hline
+    \textbf{\textcolor[RGB]{255,87,51}{Qté}} & 
+    \textbf{\textcolor[RGB]{255,87,51}{Référence / Description}} & 
+    \textbf{\textcolor[RGB]{255,87,51}{Prix Unitaire}} & 
+    \textbf{\textcolor[RGB]{255,87,51}{Prix Total}} \\
+    \hline
+    \endhead % Répète l'en-tête sur les pages suivantes
 
     % Boucle sur les items
     \BLOCK{ for item in items }
-    \VAR{item.quantity} &
-    \VAR{item.reference} &
-    \VAR{item.unit_price} \euro &
+    \VAR{item.quantity} & 
+    \VAR{item.reference} & 
+    \VAR{item.unit_price} \euro & 
     \VAR{item.total_price} \euro \\
     \hline
     \BLOCK{ endfor }
 
     % Ligne du TOTAL
-    \multicolumn{3}{|r|}{\textbf{TOTAL :}} &
+    \multicolumn{3}{|r|}{\textbf{TOTAL :}} & 
     \textbf{\VAR{final_price} \euro} \\
     \hline
-
 \end{tabularx}
 \end{center}
 
