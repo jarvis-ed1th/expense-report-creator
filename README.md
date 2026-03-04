@@ -17,17 +17,24 @@ Le programme fonctionne sur Linux et MacOS.
 Le programme ne nécessite pas d'être installé (il fonctionne depuis github), il faut seulement installer le *gestionnaire de paquets [Nix](https://nixos.org/download/)*.
 
 ## Utilisation
-1. Télécharger le fichier TEMPLATE (que vous pouvez renommer), puis remplissez le.
-2. Placez-vous dans le dossier pour lancer la commande suivante.
+1. Initialisez le fichier "TEMPLATE" (que vous pourrez renommer) avec la commande suivante. Vous pouvez vous ensuite modifier ce qu'il contient comme détaillé par la suite.
+
+```bash
+nix run github:jarvis-ed1th/expense-report-creator -- init
+```
+
+2. Pour générer la note de frais, placez-vous dans le dossier pour lancer la commande suivante.
 
 ``` bash
 nix run github:jarvis-ed1th/expense-report-creator
 ```
+
 3. (Optionnel) Si vous ne voulez pas vous placer dans le dossier, vous pouvez le transmettre en argument :
 
 ``` bash
 nix run github:jarvis-ed1th/expense-report-creator -- /chemin/du/fichier
 ```
+
 4. Vos notes de frais sont proprement générées en PDF et en LATEX dans le cas où vous souhaiteriez les modifier par la suite.
 
 ### Documents et justificatifs

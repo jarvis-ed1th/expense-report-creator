@@ -2,6 +2,7 @@ import os
 import sys
 import platform
 import subprocess
+import shutil
 from datetime import datetime
 
 import jinja2
@@ -11,7 +12,15 @@ from pypdf import PdfWriter
 
 # Analyse des arguments (s'il y en a)
 if len(sys.argv) > 1:
-    TARGET_DIR = os.path.abspath(sys.argv[1])
+    if sys.argv[1] == "init":
+        DESTINATION = os.path.join(os.getcwd(), "TEMPLATE")
+        SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+        TEMPLATE = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "..", "TEMPLATE"))
+        shutil.copytree(TEMPLATE, DESTINATION)
+        subprocess.run(["chmod", "-R", "755", DESTINATION])
+        sys.exit(0)
+    else:
+        TARGET_DIR = os.path.abspath(sys.argv[1])
 else:
     TARGET_DIR = os.getcwd()
 
