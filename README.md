@@ -14,7 +14,7 @@ Le script est entièrement documenté en convention Google. Étant adapté pour 
 Le programme fonctionne sur Linux et MacOS.
 
 ## Installation
-Le programme ne nécessite pas d'être installé (il fonctionne depuis github), il faut seulement installer le *gestionnaire de paquets [Nix](https://nixos.org/download/)*.
+Le programme ne nécessite pas d'être installé (il fonctionne depuis github), il faut seulement installer le **gestionnaire de paquets [Nix](https://nixos.org/download/)**.
 
 ## Utilisation
 1. Initialisez le fichier "TEMPLATE" (que vous pourrez renommer) avec la commande suivante. Vous pouvez vous ensuite modifier ce qu'il contient comme détaillé par la suite.

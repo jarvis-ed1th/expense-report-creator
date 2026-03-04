@@ -26,13 +26,3 @@ repos:
     hooks:
       - id: flake8
         additional_dependencies: [flake8-pyproject]
-
-  - repo: local
-    hooks:
-      - id: export-requirements
-        name: Export requirements.txt
-        language: system
-        pass_filenames: false
-        entry: sh -c "
-          poetry export -f requirements.txt --output .system/requirements.txt --without-hashes
-          && git add .system/requirements.txt"

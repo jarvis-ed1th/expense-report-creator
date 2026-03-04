@@ -1,8 +1,7 @@
 import os
-import sys
-import platform
-import subprocess
 import shutil
+import subprocess
+import sys
 from datetime import datetime
 
 import jinja2
@@ -41,8 +40,6 @@ ASSETS_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "..", "assets"))
 # Créer le dossier output s'il n'existe pas
 os.makedirs(OUTPUT_PDF_DIR, exist_ok=True)
 os.makedirs(OUTPUT_TEX_DIR, exist_ok=True)
-
-
 
 
 def load_data():
@@ -260,7 +257,7 @@ def export_tex_pdf(tex_content, ER_number, beneficiary_name, pdf_receipts):
 
             with open(final_pdf, "wb") as f_out:
                 merger.write(f_out)
-            
+
             merger.close()
             os.remove(generated_pdf)
 

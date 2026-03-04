@@ -1,0 +1,18 @@
+[project]
+name = "expense-report-creator"
+version = "1.0.0"
+description = "Créateur de notes de frais pour trésorier d'association."
+authors = [
+    {name = "Ben",email = "jarvis.edith85@gmail.com"}
+]
+readme = "README.md"
+
+[tool.isort]
+profile = "black"
+
+[tool.flake8]
+# On ignore les erreurs qui sont en conflit direct avec le style de Black
+extend-ignore = [
+    "E203",  # Espace avant ':' (Black le fait parfois pour les slices)
+    "E501"   # Longueur max black=88 vs flake8=79, on ignore l'erreur de longeur
+]

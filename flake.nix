@@ -20,18 +20,16 @@
             openpyxl
             pandas
             pillow
-            pypdf 
+            pypdf
 
             # Outils de développement
             black
             flake8
             isort
-            pre-commit 
           ]);
         in {
           default = pkgs.mkShell {
-            buildInputs = [ devPython pkgs.tectonic ];
-            shellHook = "echo 'Environnement de DEV Nix chargé";
+            buildInputs = with pkgs; [ devPython tectonic pre-commit];
           };
         }
       );
@@ -43,8 +41,8 @@
           prodPython = pkgs.python312.withPackages (ps: with ps; [
             jinja2
             openpyxl
-            pandas           
-            pillow 
+            pandas
+            pillow
             pypdf
           ]);
         in {
@@ -54,7 +52,7 @@
             text = ''
               # Nix va remplacer ${./.} par le chemin immuable dans le store
               SCRIPT_PY="${./.}/src/expense-report-creator/main.py"
-              
+
               # On appelle python avec le script figé, et on lui passe le dossier cible ($@)
               python3 "$SCRIPT_PY" "$@"
             '';
