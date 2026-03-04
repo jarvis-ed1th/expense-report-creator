@@ -52,16 +52,10 @@
             name = "expense-report-creator";
             runtimeInputs = [ prodPython pkgs.tectonic ];
             text = ''
-              BASE_DIR="$PWD"
-              SYSTEM_DIR="$BASE_DIR/.system"
-              SCRIPT_PY="$SYSTEM_DIR/src/expense-report-creator/main.py"
+              # Nix va remplacer ${./.} par le chemin immuable dans le store
+              SCRIPT_PY="${./.}/src/expense-report-creator/main.py"
               
-              if [ ! -f "$SCRIPT_PY" ]; then
-                echo "Erreur: main.py introuvable. Run doit être lancé à la racine du projet."
-                exit 1
-              fi
-
-              # Lancement avec le Python léger, $@ transmet les arguments de nix run vers python
+              # On appelle python avec le script figé, et on lui passe le dossier cible ($@)
               python3 "$SCRIPT_PY" "$@"
             '';
           };

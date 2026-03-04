@@ -1,4 +1,5 @@
 import os
+import sys
 import platform
 import subprocess
 from datetime import datetime
@@ -8,17 +9,31 @@ import pandas as pd
 from PIL import Image, ImageOps
 from pypdf import PdfWriter
 
+# Analyse des arguments (s'il y en a)
+if len(sys.argv) > 1:
+    TARGET_DIR = os.path.abspath(sys.argv[1])
+else:
+    TARGET_DIR = os.getcwd()
+
+if not os.path.exists(TARGET_DIR):
+    print(f"Erreur : Le dossier cible n'existe pas : {TARGET_DIR}")
+    sys.exit(1)
+
 # Configuration des chemins
-ROOT_DIR = os.getcwd()
-ASSETS_DIR = os.path.join(ROOT_DIR, ".system", "assets")
-OUTPUT_PDF_DIR = os.path.join(ROOT_DIR, "SORTIE_PDF")
-OUTPUT_TEX_DIR = os.path.join(ROOT_DIR, "SORTIE_LATEX")
-A_MODIFIER_DIR = os.path.join(ROOT_DIR, "A_MODIFIER")
-DATA_FILE = os.path.join(A_MODIFIER_DIR, "data.xlsx")
+DATA_FILE = os.path.join(TARGET_DIR, "data.xlsx")
+RECEIPT_DIR = os.path.join(TARGET_DIR, "justificatifs")
+OUTPUT_PDF_DIR = os.path.join(TARGET_DIR, "SORTIE_PDF")
+OUTPUT_TEX_DIR = os.path.join(TARGET_DIR, "SORTIE_LATEX")
+
+# Recherches du dossier assets
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ASSETS_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "..", "assets"))
 
 # Créer le dossier output s'il n'existe pas
 os.makedirs(OUTPUT_PDF_DIR, exist_ok=True)
 os.makedirs(OUTPUT_TEX_DIR, exist_ok=True)
+
+
 
 
 def load_data():
@@ -87,7 +102,6 @@ def load_receipts():
         receipt_file_paths (list of str): Liste des chemins des fichiers
             justificatifs à inclure dans le rapport LaTeX.
     """
-    RECEIPT_DIR = os.path.join(A_MODIFIER_DIR, "justificatifs")
     pdf_receipts = []
     images_receipts = []
 
@@ -178,7 +192,7 @@ def generate_latex(data_dict, items, final_price, receipt_file_paths):
     # Chemin de la signature si le nom est renseigné
     if data_dict.get("Nom du fichier signature (vide si pas)") != "":
         context["signature_path"] = os.path.join(
-            A_MODIFIER_DIR, data_dict.get("Nom du fichier signature (vide si pas)")
+            TARGET_DIR, data_dict.get("Nom du fichier signature (vide si pas)")
         )
     else:
         context["signature_path"] = ""
@@ -186,7 +200,7 @@ def generate_latex(data_dict, items, final_price, receipt_file_paths):
     # Chemin du logo si le nom est renseigné
     if data_dict.get("Nom du fichier logo (vide si pas)") != "":
         context["logo_path"] = os.path.join(
-            A_MODIFIER_DIR, data_dict.get("Nom du fichier logo (vide si pas)")
+            TARGET_DIR, data_dict.get("Nom du fichier logo (vide si pas)")
         )
     else:
         context["logo_path"] = ""
