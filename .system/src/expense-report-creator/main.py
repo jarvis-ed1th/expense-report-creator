@@ -6,6 +6,7 @@ from datetime import datetime
 import jinja2
 import pandas as pd
 from PIL import Image, ImageOps
+from pypdf import PdfWriter
 
 # Configuration des chemins
 ROOT_DIR = os.getcwd()
@@ -66,8 +67,8 @@ def load_data():
                     "quantity": int(quantity),
                     "reference": row["Référence"],
                     # :.2f permet le formatage d'un float (f) de 2 caractères (2) après la virgule (.)
-                    "unit_price": f"{unit_price:.2f}",
-                    "total_price": f"{total_price:.2f}",
+                    "unit_price": f"{float(unit_price):.2f}",
+                    "total_price": f"{float(total_price):.2f}",
                 }
             )
 
@@ -87,19 +88,24 @@ def load_receipts():
             justificatifs à inclure dans le rapport LaTeX.
     """
     RECEIPT_DIR = os.path.join(A_MODIFIER_DIR, "justificatifs")
-    receipt_file_paths = []
+    pdf_receipts = []
+    images_receipts = []
 
     for file in os.listdir(RECEIPT_DIR):
         path = os.path.join(RECEIPT_DIR, file)
         if os.path.isfile(path):
-            receipt_file_paths.append(path.replace("\\", "/"))
+            extension = os.path.splitext(file)[1].lower()
+            if extension == ".pdf":
+                pdf_receipts.append(path)
+            else:
+                images_receipts.append(path)
 
-            # Enregistre les images selon leur orientation exif (qui n'est pas lu par LaTeX).
-            image = Image.open(path)
-            transposed_image = ImageOps.exif_transpose(image)
-            transposed_image.save(path)
+                # Enregistre les images selon leur orientation exif (qui n'est pas lu par LaTeX).
+                image = Image.open(path)
+                transposed_image = ImageOps.exif_transpose(image)
+                transposed_image.save(path)
 
-    return receipt_file_paths
+    return pdf_receipts, images_receipts
 
 
 def generate_latex(data_dict, items, final_price, receipt_file_paths):
@@ -173,7 +179,7 @@ def generate_latex(data_dict, items, final_price, receipt_file_paths):
     if data_dict.get("Nom du fichier signature (vide si pas)") != "":
         context["signature_path"] = os.path.join(
             A_MODIFIER_DIR, data_dict.get("Nom du fichier signature (vide si pas)")
-        ).replace("\\", "/")
+        )
     else:
         context["signature_path"] = ""
 
@@ -181,14 +187,14 @@ def generate_latex(data_dict, items, final_price, receipt_file_paths):
     if data_dict.get("Nom du fichier logo (vide si pas)") != "":
         context["logo_path"] = os.path.join(
             A_MODIFIER_DIR, data_dict.get("Nom du fichier logo (vide si pas)")
-        ).replace("\\", "/")
+        )
     else:
         context["logo_path"] = ""
 
     return template.render(context)
 
 
-def export_tex_pdf(tex_content, ER_number, beneficiary_name):
+def export_tex_pdf(tex_content, ER_number, beneficiary_name, pdf_receipts):
     """Créer un fichier LaTeX à partir du contenu, et le compile en PDF.
 
     Création de 2 fichiers dans des répertoires différents, un pour le PDF compilé
@@ -213,25 +219,27 @@ def export_tex_pdf(tex_content, ER_number, beneficiary_name):
     # Écriture du fichier .tex temporaire
     with open(generated_tex, "w", encoding="utf-8") as file:
         file.write(tex_content)
-
-    # Vérifie le système d'exploitation et adapte le chemin en fonction.
-    if platform.system() == "Windows":
-        TECTONIC_PATH = os.path.join(ROOT_DIR, ".venv", "Scripts", "tectonic.exe")
-    else:
-        TECTONIC_PATH = os.path.join(ROOT_DIR, ".venv", "bin", "tectonic")
-
     try:
         subprocess.run(
-            [TECTONIC_PATH, "-o", OUTPUT_PDF_DIR, generated_tex],
+            ["tectonic", "-o", OUTPUT_PDF_DIR, generated_tex],
             check=True,  # Lève une erreur si le script plante
             capture_output=True,  # Rend tectonic silencieux
             text=True,  # Permet de lire la sortie comme du texte (string)
         )
 
+        # Fusion des PDF justificatifs à la fin du PDF généré
         if os.path.exists(generated_pdf):
-            if os.path.exists(final_pdf):
-                os.remove(final_pdf)
-            os.rename(generated_pdf, final_pdf)
+            merger = PdfWriter()
+            merger.append(generated_pdf)
+
+            for pdf_path in pdf_receipts:
+                merger.append(pdf_path)
+
+            with open(final_pdf, "wb") as f_out:
+                merger.write(f_out)
+            
+            merger.close()
+            os.remove(generated_pdf)
 
         if os.path.exists(generated_tex):
             if os.path.exists(final_tex):
@@ -252,14 +260,14 @@ def export_tex_pdf(tex_content, ER_number, beneficiary_name):
 if __name__ == "__main__":
     try:
         data_dict, items, final_price = load_data()
-        receipt_files_path = load_receipts()
-        latex_code = generate_latex(data_dict, items, final_price, receipt_files_path)
+        pdf_receipts, images_receipts = load_receipts()
+        latex_code = generate_latex(data_dict, items, final_price, images_receipts)
 
         beneficiary_name = data_dict.get(
             "Bénéficiaire (à remplir sur la feuille suivante)"
         )
         ER_number = data_dict.get("Numéro de la note de frais")
-        export_tex_pdf(latex_code, ER_number, beneficiary_name)
+        export_tex_pdf(latex_code, ER_number, beneficiary_name, pdf_receipts)
 
     except Exception as e:
         print(f"Une erreur est survenue : {e}")
